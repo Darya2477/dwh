@@ -1,0 +1,151 @@
+//Команды для подготовки окружения 
+
+ssh d.arhipova@83.166.236.17
+
+scp /home/dasha/projects/dwh/dz4/hadoop3.zip d.arhipova@83.166.236.17:/home/d.arhipova/
+
+unzip hadoop3.zip
+rm hadoop3.zip
+
+hdfs dfs -mkdir /home/d.arhipova/dz4
+hdfs dfs -copyFromLocal ./hadoop3/data3 /home/d.arhipova/dz4/
+hdfs dfs -mkdir /home/d.arhipova/warehouse
+
+hdfs dfs -mkdir /home/d.arhipova/dz4/data3/rosstat/cities
+hdfs dfs -mv /home/d.arhipova/dz4/data3/rosstat/city.csv /home/d.arhipova/dz4/data3/rosstat/cities
+
+hdfs dfs -mkdir /home/d.arhipova/dz4/data3/rosstat/products
+hdfs dfs -mv /home/d.arhipova/dz4/data3/rosstat/product.csv /home/d.arhipova/dz4/data3/rosstat/products
+
+hdfs dfs -mkdir /home/d.arhipova/dz4/data3/rosstat/products_for_stat
+hdfs dfs -mv /home/d.arhipova/dz4/data3/rosstat/products_for_stat.csv /home/d.arhipova/dz4/data3/rosstat/products_for_stats
+
+hdfs dfs -mkdir /home/d.arhipova/dz4/data3/ok/geography/rs_city
+hdfs dfs -mv /home/d.arhipova/dz4/data3/ok/geography/rs_city.csv /home/d.arhipova/dz4/data3/ok/geography/rs_city
+
+
+hdfs dfs -mkdir /home/d.arhipova/task3
+hdfs dfs -mkdir /home/d.arhipova/task3/price_stat
+hdfs dfs -mkdir /home/d.arhipova/task3/ok_dem
+hdfs dfs -mkdir /home/d.arhipova/task3/product_stat
+
+hdfs dfs -mkdir /user/d.arhipova/task3
+hdfs dfs -mkdir /user/d.arhipova/task3/price_stat
+hdfs dfs -mkdir /user/d.arhipova/task3/ok_dem
+hdfs dfs -mkdir /user/d.arhipova/task3/product_stat
+
+
+hive
+
+create database user_d_arhipova
+location '/home/d.arhipova/warehouse/';
+
+use user_d_arhipova;
+
+
+
+
+//Создание таблицы городов
+
+drop table if exists cities;
+
+CREATE EXTERNAL TABLE cities
+(
+  city_name STRING,
+  city_id INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ';'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '/home/d.arhipova/dz4/data3/rosstat/cities';
+
+select * from cities limit 10;
+
+
+
+//Создание таблицы продуктов
+
+drop table if exists products;
+
+CREATE EXTERNAL TABLE products
+(
+  product_name STRING,
+  product_id INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ';'
+LINES TERMINATED BY '\n'
+STORED AS TEXTFILE
+LOCATION '/home/d.arhipova/dz4/data3/rosstat/products';
+
+select * from products limit 10;
+
+
+
+//Создание таблицы products_for_stat
+
+drop table if exists products_for_stat;
+
+create external table products_for_stat
+(
+product_id int
+)
+row format delimited
+fields terminated by ';'
+lines terminated by '\n'
+stored as textfile
+location '/home/d.arhipova/dz4/data3/rosstat/products_for_stat';
+
+select * from products_for_stat limit 10;
+
+
+
+//Создание таблицы core_demography
+
+drop table if exists core_demography;
+
+create external table core_demography (
+id int,
+create_date bigint,
+birth_date bigint,
+gender int,
+id_country bigint,
+id_location int,
+login_region int 
+)
+row format delimited
+fields terminated by '\t'
+lines terminated by '\n'
+location '/home/d.arhipova/dz4/data3/ok/coreDemography';
+
+select * from core_demography limit 10;
+
+
+
+//Создание таблицы rs_city
+
+drop table if exists rs_city;
+
+create external table rs_city (
+id_location int,
+city_id int
+)
+row format delimited
+fields terminated by '\t'
+lines terminated by '\n'
+stored as textfile
+location '/home/d.arhipova/dz4/data3/ok/geography/rs_city';
+
+select * from rs_city limit 10;
+
+
+
+//Объединение в пайплайн с помощью фреймворка luigi
+
+hdfs dfs -ls /home/d.arhipova/dz4/luigi
+
+scp /home/dasha/projects/luigi/arhipova_pipeline.py d.arhipova@83.166.236.17:/home/d.arhipova/
+
+PYTHONPATH='.' luigi --module arhipova_pipeline Pipeline
+

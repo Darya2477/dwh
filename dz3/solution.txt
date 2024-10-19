@@ -1,0 +1,63 @@
+//Команды для подготовки окружения 
+
+ssh d.arhipova@83.166.236.17
+
+scp /home/dasha/projects/dwh/dz3/hadoop2.zip d.arhipova@83.166.236.17:/home/d.arhipova/
+
+unzip hadoop2.zip
+rm hadoop2.zip
+
+hdfs dfs -mkdir /home/d.arhipova/dz3
+hdfs dfs -copyFromLocal ./hadoop2/data2 /home/d.arhipova/dz3/
+hdfs dfs -mkdir /home/d.arhipova/warehouse
+
+hive
+
+create database user_d_arhipova
+location '/home/d.arhipova/warehouse/';
+
+use user_d_arhipova;
+
+drop table if exists core_demography;
+
+//Создание таблицы
+
+create external table core_demography (
+id int,
+create_date bigint,
+birth_date bigint,
+gender int,
+id_country bigint,
+id_location int,
+login_region int 
+)
+row format delimited
+fields terminated by '\t'
+lines terminated by '\n'
+location '/home/d.arhipova/dz3/data2/ok/coreDemography';
+
+//Запрос
+
+select
+month(from_unixtime(birth_date * 86400)) as month,
+count(1) as amount
+from core_demography
+group by month(from_unixtime(birth_date * 86400))
+order by month;
+
+//Результат запроса
+
+NULL	9
+1	10297
+2	8496
+3	9242
+4	8875
+5	9051
+6	9332
+7	9534
+8	9228
+9	8653
+10	8534
+11	8061
+12	8253
+
